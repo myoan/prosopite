@@ -7,6 +7,7 @@ class TestQueries < Minitest::Test
 
   def teardown
     Prosopite.allow_stack_paths = []
+    Prosopite.focus_stack_paths = []
     Prosopite.ignore_queries = nil
     Prosopite.enabled = true
   end
@@ -347,6 +348,68 @@ class TestQueries < Minitest::Test
     chairs.each { |c| create_list(:leg, 4, chair: c) }
 
     Prosopite.allow_stack_paths = ["some_random_path.rb"]
+
+    Prosopite.scan
+    Chair.last(20).each do |c|
+      c.legs.first
+    end
+
+    assert_n_plus_one
+  end
+
+  def test_focus_stack_paths
+    # 20 chairs, 4 legs each
+    chairs = create_list(:chair, 20)
+    chairs.each { |c| create_list(:leg, 4, chair: c) }
+
+    Prosopite.focus_stack_paths = ["test/test_queries.rb"]
+
+    Prosopite.scan
+    Chair.last(20).each do |c|
+      c.legs.first
+    end
+
+    assert_n_plus_one
+  end
+
+  def test_focus_stack_paths_with_regex
+    # 20 chairs, 4 legs each
+    chairs = create_list(:chair, 20)
+    chairs.each { |c| create_list(:leg, 4, chair: c) }
+
+    # ...prosopite/test/test_queries.rb:195:in `block in test_focus_stack_paths_with_regex'
+    Prosopite.focus_stack_paths = [/test_queries.*test_focus_stack_paths_with_regex/]
+
+    Prosopite.scan
+    Chair.last(20).each do |c|
+      c.legs.first
+    end
+
+    assert_n_plus_one
+  end
+
+  def test_focus_stack_paths_does_not_match_query_source
+    # 20 chairs, 4 legs each
+    chairs = create_list(:chair, 20)
+    chairs.each { |c| create_list(:leg, 4, chair: c) }
+
+    Prosopite.focus_stack_paths = ["some_random_path.rb"]
+
+    Prosopite.scan
+    Chair.last(20).each do |c|
+      c.legs.first
+    end
+
+    assert_no_n_plus_ones
+  end
+
+  def test_focus_stack_paths_has_priority_over_allow_stack_paths
+    # 20 chairs, 4 legs each
+    chairs = create_list(:chair, 20)
+    chairs.each { |c| create_list(:leg, 4, chair: c) }
+
+    Prosopite.allow_stack_paths = ["test/test_queries.rb"]
+    Prosopite.focus_stack_paths = ["test/"]
 
     Prosopite.scan
     Chair.last(20).each do |c|
