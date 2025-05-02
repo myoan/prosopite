@@ -150,11 +150,10 @@ module Prosopite
 
           kaller = tc[:prosopite_query_caller][location_key]
           allow_list = (@allow_stack_paths + DEFAULT_ALLOW_LIST)
-          is_focused = kaller.any? { |f| @focus_stack_paths.any? { |s| f.match?(s) }}
+          is_focused = @focus_stack_paths.empty? ? true : kaller.any? { |f| @focus_stack_paths.any? { |s| f.match?(s) }}
           is_allowed = kaller.any? { |f| allow_list.any? { |s| f.match?(s) } }
-          do_notify = (@focus_stack_paths.empty? && !is_allowed) || is_focused
 
-          if do_notify
+          if is_focused && !is_allowed
             queries.each do |q|
               tc[:prosopite_notifications][q] = kaller
             end

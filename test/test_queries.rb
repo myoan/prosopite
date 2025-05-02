@@ -403,7 +403,39 @@ class TestQueries < Minitest::Test
     assert_no_n_plus_ones
   end
 
-  def test_focus_stack_paths_has_priority_over_allow_stack_paths
+  def test_caller_which_not_focused_and_allowed_not_notify
+    # 20 chairs, 4 legs each
+    chairs = create_list(:chair, 20)
+    chairs.each { |c| create_list(:leg, 4, chair: c) }
+
+    Prosopite.allow_stack_paths = ["test/test_queries.rb"]
+    Prosopite.focus_stack_paths = ["out_of_focus.rb"]
+
+    Prosopite.scan
+    Chair.last(20).each do |c|
+      c.legs.first
+    end
+
+    assert_no_n_plus_ones
+  end
+
+  def test_caller_which_focused_and_not_allowed_notify
+    # 20 chairs, 4 legs each
+    chairs = create_list(:chair, 20)
+    chairs.each { |c| create_list(:leg, 4, chair: c) }
+
+    Prosopite.allow_stack_paths = ["some_random_path.rb"]
+    Prosopite.focus_stack_paths = ["test/test_queries.rb"]
+
+    Prosopite.scan
+    Chair.last(20).each do |c|
+      c.legs.first
+    end
+
+    assert_n_plus_one
+  end
+
+  def test_caller_which_focused_and_allowed_not_notify
     # 20 chairs, 4 legs each
     chairs = create_list(:chair, 20)
     chairs.each { |c| create_list(:leg, 4, chair: c) }
@@ -416,7 +448,23 @@ class TestQueries < Minitest::Test
       c.legs.first
     end
 
-    assert_n_plus_one
+    assert_no_n_plus_ones
+  end
+
+  def test_caller_which_not_focused_and_not_allowed_not_notify
+    # 20 chairs, 4 legs each
+    chairs = create_list(:chair, 20)
+    chairs.each { |c| create_list(:leg, 4, chair: c) }
+
+    Prosopite.allow_stack_paths = ["some_random_path.rb"]
+    Prosopite.focus_stack_paths = ["out_of_focus.rb"]
+
+    Prosopite.scan
+    Chair.last(20).each do |c|
+      c.legs.first
+    end
+
+    assert_no_n_plus_ones
   end
 
   def test_ignore_queries
