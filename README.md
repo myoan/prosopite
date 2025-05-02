@@ -236,6 +236,14 @@ Ignore notifications matching a specific SQL query:
 Prosopite.ignore_queries = [/regex_match/, "SELECT * from EXACT_STRING_MATCH"]
 ```
 
+## Focus list
+
+Notify only for call stacks containing one or more substrings / regex:
+
+```ruby
+Prosopite.focus_stack_paths = ['substring_in_call_stack', /regex/]
+```
+
 ## Scanning code outside controllers or tests
 
 All you have to do is to wrap the code with:
